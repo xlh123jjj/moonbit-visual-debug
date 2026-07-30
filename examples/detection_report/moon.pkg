@@ -1,0 +1,5 @@
+import {
+  "xlh123jjj/moonbit-visual-debug" @visual,
+}
+
+pkgtype(kind: "executable")
