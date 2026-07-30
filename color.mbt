@@ -13,12 +13,7 @@ pub fn Color::rgb(r~ : Int, g~ : Int, b~ : Int) -> Color {
 
 ///|
 pub fn Color::rgba(r~ : Int, g~ : Int, b~ : Int, a~ : Double) -> Color {
-  {
-    r: clamp_byte(r),
-    g: clamp_byte(g),
-    b: clamp_byte(b),
-    a: clamp_alpha(a),
-  }
+  { r: clamp_byte(r), g: clamp_byte(g), b: clamp_byte(b), a: clamp_alpha(a) }
 }
 
 ///|

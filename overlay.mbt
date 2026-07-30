@@ -25,7 +25,11 @@ pub(all) struct Keypoint {
 } derive(Debug, ToJson)
 
 ///|
-pub fn Keypoint::new(point~ : Point, name~ : String, visible? : Bool = true) -> Keypoint {
+pub fn Keypoint::new(
+  point~ : Point,
+  name~ : String,
+  visible? : Bool = true,
+) -> Keypoint {
   { point, name, visible }
 }
 
@@ -58,7 +62,12 @@ pub(all) enum Overlay {
   Keypoints(points~ : Array[Keypoint], color~ : Color?)
   Trajectory(path~ : Trajectory, color~ : Color?)
   Heatmap(cells~ : Array[HeatCell], low~ : Color?, high~ : Color?)
-  ErrorRegion(rect~ : Rect, expected~ : String, actual~ : String, severity~ : Double)
+  ErrorRegion(
+    rect~ : Rect,
+    expected~ : String,
+    actual~ : String,
+    severity~ : Double
+  )
 } derive(Debug, ToJson)
 
 ///|
@@ -119,7 +128,10 @@ pub fn DebugDocument::new(
 }
 
 ///|
-pub fn DebugDocument::add_layer(self : DebugDocument, layer : Layer) -> DebugDocument {
+pub fn DebugDocument::add_layer(
+  self : DebugDocument,
+  layer : Layer,
+) -> DebugDocument {
   let layers = self.layers.copy()
   layers.push(layer)
   { title: self.title, image: self.image, image_href: self.image_href, layers }

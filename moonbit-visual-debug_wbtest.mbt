@@ -9,7 +9,10 @@ test "color clamping and palette remain stable" {
 test "canvas drawing changes encoded png size" {
   let blank = Canvas::new(width=8, height=8).to_png()
   let canvas = Canvas::new(width=8, height=8)
-  canvas.fill_rect(Rect::new(x=2.0, y=2.0, width=3.0, height=3.0), Color::rgb(r=255, g=0, b=0))
+  canvas.fill_rect(
+    Rect::new(x=2.0, y=2.0, width=3.0, height=3.0),
+    Color::rgb(r=255, g=0, b=0),
+  )
   let painted = canvas.to_png()
   inspect(blank.length() == painted.length(), content="true")
   inspect(blank != painted, content="true")

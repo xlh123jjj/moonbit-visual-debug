@@ -34,29 +34,29 @@ Native builds work when a system C compiler is installed. The CI workflow instal
 ## Quick Example
 
 ```mbt check
+///|
 test "build a report" {
   let detections = Layer::new(id="detections")
-  .add(
-    BBox(
-      rect=Rect::new(x=12.0, y=10.0, width=48.0, height=36.0),
-      label=Some(Label::new(text="part", score=0.91)),
-      color=Some(Color::rgb(r=39, g=125, b=255)),
-    ),
-  )
-  .add(
-    Keypoints(
-      points=[
-        Keypoint::new(point=Point::new(x=20.0, y=22.0), name="a"),
-        Keypoint::new(point=Point::new(x=48.0, y=35.0), name="b"),
-      ],
-      color=None,
-    ),
-  )
+    .add(
+      BBox(
+        rect=Rect::new(x=12.0, y=10.0, width=48.0, height=36.0),
+        label=Some(Label::new(text="part", score=0.91)),
+        color=Some(Color::rgb(r=39, g=125, b=255)),
+      ),
+    )
+    .add(
+      Keypoints(
+        points=[
+          Keypoint::new(point=Point::new(x=20.0, y=22.0), name="a"),
+          Keypoint::new(point=Point::new(x=48.0, y=35.0), name="b"),
+        ],
+        color=None,
+      ),
+    )
   let doc = DebugDocument::new(
     title="inspection",
     image=ImageSpec::new(width=96, height=64),
-  )
-  .add_layer(detections)
+  ).add_layer(detections)
   inspect(doc.overlay_count(), content="2")
   inspect(doc.to_svg().contains("<svg"), content="true")
   inspect(doc.to_html_report().contains("<table>"), content="true")

@@ -16,18 +16,27 @@ pub fn DebugDocument::to_html_report(self : DebugDocument) -> String {
 }
 
 ///|
-pub fn DebugDocument::to_html_report_with(self : DebugDocument, options : ReportOptions) -> String {
+pub fn DebugDocument::to_html_report_with(
+  self : DebugDocument,
+  options : ReportOptions,
+) -> String {
   let out = StringBuilder()
   out.write_string("<!doctype html>\n<html lang=\"en\">\n<head>\n")
   out.write_string("<meta charset=\"utf-8\"/>\n")
-  out.write_string("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/>\n")
+  out.write_string(
+    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/>\n",
+  )
   out.write_string("<title>\{escape_html(self.title)}</title>\n")
   out.write_string("<style>\{report_css(options.theme)}</style>\n")
   out.write_string("</head>\n<body>\n")
   out.write_string("<main>\n")
   out.write_string("<header><h1>\{escape_html(self.title)}</h1>")
-  out.write_string("<p>\{self.image.width}x\{self.image.height}, \{self.overlay_count()} overlays</p></header>\n")
-  out.write_string("<section class=\"stage\">\n\{self.to_svg_with(options.svg)}</section>\n")
+  out.write_string(
+    "<p>\{self.image.width}x\{self.image.height}, \{self.overlay_count()} overlays</p></header>\n",
+  )
+  out.write_string(
+    "<section class=\"stage\">\n\{self.to_svg_with(options.svg)}</section>\n",
+  )
   if options.include_metadata {
     write_layer_summary(out, self)
   }
@@ -37,8 +46,12 @@ pub fn DebugDocument::to_html_report_with(self : DebugDocument, options : Report
 
 ///|
 fn write_layer_summary(out : StringBuilder, doc : DebugDocument) -> Unit {
-  out.write_string("<section class=\"summary\"><h2>Layers</h2><table><thead><tr>")
-  out.write_string("<th>Layer</th><th>Visible</th><th>Opacity</th><th>Overlays</th>")
+  out.write_string(
+    "<section class=\"summary\"><h2>Layers</h2><table><thead><tr>",
+  )
+  out.write_string(
+    "<th>Layer</th><th>Visible</th><th>Opacity</th><th>Overlays</th>",
+  )
   out.write_string("</tr></thead><tbody>\n")
   for layer in doc.layers {
     out.write_string("<tr><td>\{escape_html(layer.id)}</td>")

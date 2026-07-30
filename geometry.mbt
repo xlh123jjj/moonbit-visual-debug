@@ -60,7 +60,12 @@ pub(all) struct Rect {
 } derive(Debug, ToJson)
 
 ///|
-pub fn Rect::new(x~ : Double, y~ : Double, width~ : Double, height~ : Double) -> Rect {
+pub fn Rect::new(
+  x~ : Double,
+  y~ : Double,
+  width~ : Double,
+  height~ : Double,
+) -> Rect {
   { x, y, width, height }
 }
 
@@ -137,10 +142,18 @@ pub fn Rect::iou(self : Rect, other : Rect) -> Double {
 
 ///|
 fn min_double(a : Double, b : Double) -> Double {
-  if a < b { a } else { b }
+  if a < b {
+    a
+  } else {
+    b
+  }
 }
 
 ///|
 fn max_double(a : Double, b : Double) -> Double {
-  if a > b { a } else { b }
+  if a > b {
+    a
+  } else {
+    b
+  }
 }

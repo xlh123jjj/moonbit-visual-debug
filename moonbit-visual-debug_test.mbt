@@ -1,34 +1,40 @@
 ///|
 fn sample_document() -> DebugDocument {
   let boxes = Layer::new(id="detections")
-  .add(
-    BBox(
-      rect=Rect::new(x=10.0, y=12.0, width=40.0, height=30.0),
-      label=Some(Label::new(text="person", score=0.92)),
-      color=None,
-    ),
-  )
-  .add(
-    Keypoints(
-      points=[
-        Keypoint::new(point=Point::new(x=18.0, y=20.0), name="eye"),
-        Keypoint::new(point=Point::new(x=30.0, y=24.0), name="hand"),
-      ],
-      color=Some(Color::rgb(r=16, g=185, b=129)),
-    ),
-  )
+    .add(
+      BBox(
+        rect=Rect::new(x=10.0, y=12.0, width=40.0, height=30.0),
+        label=Some(Label::new(text="person", score=0.92)),
+        color=None,
+      ),
+    )
+    .add(
+      Keypoints(
+        points=[
+          Keypoint::new(point=Point::new(x=18.0, y=20.0), name="eye"),
+          Keypoint::new(point=Point::new(x=30.0, y=24.0), name="hand"),
+        ],
+        color=Some(Color::rgb(r=16, g=185, b=129)),
+      ),
+    )
   let heat = Layer::new(id="heat")
-  .with_opacity(0.85)
-  .add(
-    Heatmap(
-      cells=[
-        HeatCell::new(rect=Rect::new(x=0.0, y=0.0, width=16.0, height=16.0), value=0.1),
-        HeatCell::new(rect=Rect::new(x=16.0, y=0.0, width=16.0, height=16.0), value=0.9),
-      ],
-      low=None,
-      high=None,
-    ),
-  )
+    .with_opacity(0.85)
+    .add(
+      Heatmap(
+        cells=[
+          HeatCell::new(
+            rect=Rect::new(x=0.0, y=0.0, width=16.0, height=16.0),
+            value=0.1,
+          ),
+          HeatCell::new(
+            rect=Rect::new(x=16.0, y=0.0, width=16.0, height=16.0),
+            value=0.9,
+          ),
+        ],
+        low=None,
+        high=None,
+      ),
+    )
   DebugDocument::new(title="demo", image=ImageSpec::new(width=96, height=64))
   .add_layer(boxes)
   .add_layer(heat)
@@ -67,15 +73,24 @@ test "png encoder writes standard signature" {
   let png = sample_document().to_png()
   inspect(png.length() > 32, content="true")
   inspect(png[0], content="b'\\x89'")
-  inspect(png[1], content=(
-    #|b'\x50'
-  ))
-  inspect(png[2], content=(
-    #|b'\x4E'
-  ))
-  inspect(png[3], content=(
-    #|b'\x47'
-  ))
+  inspect(
+    png[1],
+    content=(
+      #|b'\x50'
+    ),
+  )
+  inspect(
+    png[2],
+    content=(
+      #|b'\x4E'
+    ),
+  )
+  inspect(
+    png[3],
+    content=(
+      #|b'\x47'
+    ),
+  )
 }
 
 ///|

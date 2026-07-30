@@ -1,0 +1,200 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "xlh123jjj/moonbit-visual-debug"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn compare_detections(Array[Detection], Array[Detection], iou_threshold? : Double) -> MatchSummary
+
+pub fn palette(Int) -> Color
+
+// Errors
+
+// Types and methods
+pub(all) struct Canvas {
+  width : Int
+  height : Int
+  pixels : Array[Byte]
+} derive(@debug.Debug)
+pub fn Canvas::draw_point(Self, Point, Color, radius? : Int) -> Unit
+pub fn Canvas::fill_rect(Self, Rect, Color) -> Unit
+pub fn Canvas::from_image_spec(ImageSpec, background? : Color) -> Self
+pub fn Canvas::new(width~ : Int, height~ : Int, background? : Color) -> Self
+pub fn Canvas::set_pixel(Self, Int, Int, Color) -> Unit
+pub fn Canvas::stroke_rect(Self, Rect, Color, width? : Int) -> Unit
+pub fn Canvas::to_png(Self) -> Bytes
+
+pub(all) struct Color {
+  r : Int
+  g : Int
+  b : Int
+  a : Double
+} derive(ToJson, @debug.Debug)
+pub fn Color::rgb(r~ : Int, g~ : Int, b~ : Int) -> Self
+pub fn Color::rgba(r~ : Int, g~ : Int, b~ : Int, a~ : Double) -> Self
+pub fn Color::to_css(Self) -> String
+pub fn Color::to_hex(Self) -> String
+pub fn Color::with_alpha(Self, Double) -> Self
+
+pub(all) struct DebugDocument {
+  title : String
+  image : ImageSpec
+  image_href : String?
+  layers : Array[Layer]
+} derive(ToJson, @debug.Debug)
+pub fn DebugDocument::add_layer(Self, Layer) -> Self
+pub fn DebugDocument::new(title~ : String, image~ : ImageSpec, image_href? : String) -> Self
+pub fn DebugDocument::overlay_count(Self) -> Int
+pub fn DebugDocument::to_canvas(Self, background? : Color) -> Canvas
+pub fn DebugDocument::to_html_report(Self) -> String
+pub fn DebugDocument::to_html_report_with(Self, ReportOptions) -> String
+pub fn DebugDocument::to_png(Self) -> Bytes
+pub fn DebugDocument::to_svg(Self) -> String
+pub fn DebugDocument::to_svg_with(Self, SvgOptions) -> String
+pub fn DebugDocument::visible_layers(Self) -> Array[Layer]
+
+pub(all) struct Detection {
+  id : String
+  rect : Rect
+  label : String
+  score : Double
+} derive(ToJson, @debug.Debug)
+pub fn Detection::new(id~ : String, rect~ : Rect, label~ : String, score? : Double) -> Self
+
+pub(all) struct HeatCell {
+  rect : Rect
+  value : Double
+} derive(ToJson, @debug.Debug)
+pub fn HeatCell::new(rect~ : Rect, value~ : Double) -> Self
+
+pub(all) struct ImageSpec {
+  width : Int
+  height : Int
+} derive(Eq, ToJson, @debug.Debug)
+pub fn ImageSpec::area(Self) -> Int
+pub fn ImageSpec::new(width~ : Int, height~ : Int) -> Self
+pub fn ImageSpec::valid(Self) -> Bool
+
+pub(all) struct Keypoint {
+  point : Point
+  name : String
+  visible : Bool
+} derive(ToJson, @debug.Debug)
+pub fn Keypoint::new(point~ : Point, name~ : String, visible? : Bool) -> Self
+
+pub(all) struct Label {
+  text : String
+  score : Double?
+} derive(ToJson, @debug.Debug)
+pub fn Label::new(text~ : String, score? : Double) -> Self
+
+pub(all) struct Layer {
+  id : String
+  visible : Bool
+  opacity : Double
+  overlays : Array[Overlay]
+} derive(ToJson, @debug.Debug)
+pub fn Layer::add(Self, Overlay) -> Self
+pub fn Layer::hidden(Self) -> Self
+pub fn Layer::new(id~ : String, overlays? : Array[Overlay]) -> Self
+pub fn Layer::with_opacity(Self, Double) -> Self
+
+pub(all) enum MarkerShape {
+  Circle
+  Square
+  Diamond
+  Cross
+} derive(ToJson, @debug.Debug)
+
+pub(all) enum MatchKind {
+  TruePositive
+  FalsePositive
+  FalseNegative
+  LabelMismatch
+} derive(ToJson, @debug.Debug)
+
+pub(all) struct MatchRecord {
+  kind : MatchKind
+  expected : Detection?
+  actual : Detection?
+  iou : Double
+} derive(ToJson, @debug.Debug)
+pub fn MatchRecord::is_error(Self) -> Bool
+
+pub(all) struct MatchSummary {
+  records : Array[MatchRecord]
+  true_positive : Int
+  false_positive : Int
+  false_negative : Int
+  label_mismatch : Int
+} derive(ToJson, @debug.Debug)
+pub fn MatchSummary::error_count(Self) -> Int
+pub fn MatchSummary::precision(Self) -> Double
+pub fn MatchSummary::recall(Self) -> Double
+pub fn MatchSummary::to_error_layer(Self, id? : String) -> Layer
+
+pub(all) enum Overlay {
+  BBox(rect~ : Rect, label~ : Label?, color~ : Color?)
+  Mask(polygons~ : Array[Array[Point]], label~ : Label?, color~ : Color?)
+  Keypoints(points~ : Array[Keypoint], color~ : Color?)
+  Trajectory(path~ : Trajectory, color~ : Color?)
+  Heatmap(cells~ : Array[HeatCell], low~ : Color?, high~ : Color?)
+  ErrorRegion(rect~ : Rect, expected~ : String, actual~ : String, severity~ : Double)
+} derive(ToJson, @debug.Debug)
+
+pub(all) struct Point {
+  x : Double
+  y : Double
+} derive(ToJson, @debug.Debug)
+pub fn Point::new(x~ : Double, y~ : Double) -> Self
+pub fn Point::scale(Self, sx~ : Double, sy~ : Double) -> Self
+pub fn Point::translate(Self, dx~ : Double, dy~ : Double) -> Self
+
+pub(all) struct Rect {
+  x : Double
+  y : Double
+  width : Double
+  height : Double
+} derive(ToJson, @debug.Debug)
+pub fn Rect::area(Self) -> Double
+pub fn Rect::bottom(Self) -> Double
+pub fn Rect::intersection(Self, Self) -> Self?
+pub fn Rect::intersects(Self, Self) -> Bool
+pub fn Rect::iou(Self, Self) -> Double
+pub fn Rect::new(x~ : Double, y~ : Double, width~ : Double, height~ : Double) -> Self
+pub fn Rect::right(Self) -> Double
+pub fn Rect::scale(Self, sx~ : Double, sy~ : Double) -> Self
+pub fn Rect::translate(Self, dx~ : Double, dy~ : Double) -> Self
+
+pub(all) struct ReportOptions {
+  svg : SvgOptions
+  include_metadata : Bool
+  theme : String
+} derive(ToJson, @debug.Debug)
+pub fn ReportOptions::default() -> Self
+
+pub(all) struct Size {
+  width : Double
+  height : Double
+} derive(ToJson, @debug.Debug)
+pub fn Size::new(width~ : Double, height~ : Double) -> Self
+
+pub(all) struct SvgOptions {
+  show_labels : Bool
+  show_grid : Bool
+  background : Color
+} derive(ToJson, @debug.Debug)
+pub fn SvgOptions::default() -> Self
+
+pub(all) struct Trajectory {
+  id : String
+  points : Array[Point]
+} derive(ToJson, @debug.Debug)
+pub fn Trajectory::new(id~ : String, points~ : Array[Point]) -> Self
+
+// Type aliases
+
+// Traits
+

@@ -19,7 +19,7 @@ repository = "https://github.com/xlh123jjj/moonbit-visual-debug"
 
 license = "Apache-2.0"
 
-keywords = ["visual-debug", "overlay", "computer-vision", "svg", "report"]
+keywords = [ "visual-debug", "overlay", "computer-vision", "svg", "report" ]
 
 preferred_target = "native"
 

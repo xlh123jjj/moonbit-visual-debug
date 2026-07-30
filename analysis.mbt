@@ -7,7 +7,12 @@ pub(all) struct Detection {
 } derive(Debug, ToJson)
 
 ///|
-pub fn Detection::new(id~ : String, rect~ : Rect, label~ : String, score? : Double = 1.0) -> Detection {
+pub fn Detection::new(
+  id~ : String,
+  rect~ : Rect,
+  label~ : String,
+  score? : Double = 1.0,
+) -> Detection {
   { id, rect, label, score }
 }
 
@@ -52,13 +57,21 @@ pub fn MatchSummary::error_count(self : MatchSummary) -> Int {
 ///|
 pub fn MatchSummary::precision(self : MatchSummary) -> Double {
   let denom = self.true_positive + self.false_positive + self.label_mismatch
-  if denom == 0 { 0.0 } else { self.true_positive.to_double() / denom.to_double() }
+  if denom == 0 {
+    0.0
+  } else {
+    self.true_positive.to_double() / denom.to_double()
+  }
 }
 
 ///|
 pub fn MatchSummary::recall(self : MatchSummary) -> Double {
   let denom = self.true_positive + self.false_negative + self.label_mismatch
-  if denom == 0 { 0.0 } else { self.true_positive.to_double() / denom.to_double() }
+  if denom == 0 {
+    0.0
+  } else {
+    self.true_positive.to_double() / denom.to_double()
+  }
 }
 
 ///|
@@ -146,8 +159,11 @@ fn best_unused_match(
 }
 
 ///|
-pub fn MatchSummary::to_error_layer(self : MatchSummary, id? : String = "errors") -> Layer {
-  let mut layer = Layer::new(id=id)
+pub fn MatchSummary::to_error_layer(
+  self : MatchSummary,
+  id? : String = "errors",
+) -> Layer {
+  let mut layer = Layer::new(id~)
   for record in self.records {
     match record.kind {
       TruePositive => ()

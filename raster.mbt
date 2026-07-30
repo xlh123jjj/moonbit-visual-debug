@@ -6,7 +6,11 @@ pub(all) struct Canvas {
 } derive(Debug)
 
 ///|
-pub fn Canvas::new(width~ : Int, height~ : Int, background? : Color = Color::rgb(r=15, g=23, b=42)) -> Canvas {
+pub fn Canvas::new(
+  width~ : Int,
+  height~ : Int,
+  background? : Color = Color::rgb(r=15, g=23, b=42),
+) -> Canvas {
   let pixels : Array[Byte] = []
   for _ in 0..<(width * height) {
     pixels.push(background.r.to_byte())
@@ -18,12 +22,20 @@ pub fn Canvas::new(width~ : Int, height~ : Int, background? : Color = Color::rgb
 }
 
 ///|
-pub fn Canvas::from_image_spec(image : ImageSpec, background? : Color = Color::rgb(r=15, g=23, b=42)) -> Canvas {
-  Canvas::new(width=image.width, height=image.height, background=background)
+pub fn Canvas::from_image_spec(
+  image : ImageSpec,
+  background? : Color = Color::rgb(r=15, g=23, b=42),
+) -> Canvas {
+  Canvas::new(width=image.width, height=image.height, background~)
 }
 
 ///|
-pub fn Canvas::set_pixel(self : Canvas, x : Int, y : Int, color : Color) -> Unit {
+pub fn Canvas::set_pixel(
+  self : Canvas,
+  x : Int,
+  y : Int,
+  color : Color,
+) -> Unit {
   if x >= 0 && y >= 0 && x < self.width && y < self.height {
     let index = (y * self.width + x) * 4
     self.pixels[index] = color.r.to_byte()
@@ -47,7 +59,12 @@ pub fn Canvas::fill_rect(self : Canvas, rect : Rect, color : Color) -> Unit {
 }
 
 ///|
-pub fn Canvas::stroke_rect(self : Canvas, rect : Rect, color : Color, width? : Int = 2) -> Unit {
+pub fn Canvas::stroke_rect(
+  self : Canvas,
+  rect : Rect,
+  color : Color,
+  width? : Int = 2,
+) -> Unit {
   let x0 = floor_to_int(rect.x)
   let y0 = floor_to_int(rect.y)
   let x1 = ceil_to_int(rect.right())
@@ -65,12 +82,17 @@ pub fn Canvas::stroke_rect(self : Canvas, rect : Rect, color : Color, width? : I
 }
 
 ///|
-pub fn Canvas::draw_point(self : Canvas, point : Point, color : Color, radius? : Int = 3) -> Unit {
+pub fn Canvas::draw_point(
+  self : Canvas,
+  point : Point,
+  color : Color,
+  radius? : Int = 3,
+) -> Unit {
   let cx = point.x.round().to_int()
   let cy = point.y.round().to_int()
   let rr = radius * radius
-  for y in (cy - radius)..=(cy + radius) {
-    for x in (cx - radius)..=(cx + radius) {
+  for y in (cy - radius)..<=(cy + radius) {
+    for x in (cx - radius)..<=(cx + radius) {
       let dx = x - cx
       let dy = y - cy
       if dx * dx + dy * dy <= rr {
@@ -81,8 +103,11 @@ pub fn Canvas::draw_point(self : Canvas, point : Point, color : Color, radius? :
 }
 
 ///|
-pub fn DebugDocument::to_canvas(self : DebugDocument, background? : Color = Color::rgb(r=15, g=23, b=42)) -> Canvas {
-  let canvas = Canvas::from_image_spec(self.image, background=background)
+pub fn DebugDocument::to_canvas(
+  self : DebugDocument,
+  background? : Color = Color::rgb(r=15, g=23, b=42),
+) -> Canvas {
+  let canvas = Canvas::from_image_spec(self.image, background~)
   for layer_index, layer in self.visible_layers() {
     for overlay_index, overlay in layer.overlays {
       draw_overlay(canvas, overlay, layer_index + overlay_index)
@@ -99,7 +124,8 @@ pub fn DebugDocument::to_png(self : DebugDocument) -> Bytes {
 ///|
 fn draw_overlay(canvas : Canvas, overlay : Overlay, index : Int) -> Unit {
   match overlay {
-    BBox(rect~, color~, ..) => canvas.stroke_rect(rect, resolve_raster_color(color, index))
+    BBox(rect~, color~, ..) =>
+      canvas.stroke_rect(rect, resolve_raster_color(color, index))
     Mask(polygons~, color~, ..) => {
       let color = resolve_raster_color(color, index).with_alpha(0.45)
       for polygon in polygons {
@@ -127,7 +153,12 @@ fn draw_overlay(canvas : Canvas, overlay : Overlay, index : Int) -> Unit {
       let low_color = resolve_raster_color(low, 2)
       let high_color = resolve_raster_color(high, 1)
       for cell in cells {
-        canvas.fill_rect(cell.rect, raster_mix(low_color, high_color, clamp_raster(cell.value)).with_alpha(0.55))
+        canvas.fill_rect(
+          cell.rect,
+          raster_mix(low_color, high_color, clamp_raster(cell.value)).with_alpha(
+            0.55,
+          ),
+        )
       }
     }
     ErrorRegion(rect~, severity~, ..) => {
@@ -144,7 +175,14 @@ fn draw_overlay(canvas : Canvas, overlay : Overlay, index : Int) -> Unit {
 ///|
 pub fn Canvas::to_png(self : Canvas) -> Bytes {
   let png : Array[Byte] = [
-    byte(137), byte(80), byte(78), byte(71), byte(13), byte(10), byte(26), byte(10),
+    byte(137),
+    byte(80),
+    byte(78),
+    byte(71),
+    byte(13),
+    byte(10),
+    byte(26),
+    byte(10),
   ]
   append_chunk(png, "IHDR", ihdr_data(self.width, self.height))
   let scanlines = png_scanlines(self)
@@ -270,12 +308,22 @@ fn bounds_of_points(points : Array[Point]) -> Rect? {
       let mut max_x = first.x
       let mut max_y = first.y
       for point in points {
-        if point.x < min_x { min_x = point.x }
-        if point.y < min_y { min_y = point.y }
-        if point.x > max_x { max_x = point.x }
-        if point.y > max_y { max_y = point.y }
+        if point.x < min_x {
+          min_x = point.x
+        }
+        if point.y < min_y {
+          min_y = point.y
+        }
+        if point.x > max_x {
+          max_x = point.x
+        }
+        if point.y > max_y {
+          max_y = point.y
+        }
       }
-      Some(Rect::new(x=min_x, y=min_y, width=max_x - min_x, height=max_y - min_y))
+      Some(
+        Rect::new(x=min_x, y=min_y, width=max_x - min_x, height=max_y - min_y),
+      )
     }
   }
 }

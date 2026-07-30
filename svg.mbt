@@ -20,7 +20,10 @@ pub fn DebugDocument::to_svg(self : DebugDocument) -> String {
 }
 
 ///|
-pub fn DebugDocument::to_svg_with(self : DebugDocument, options : SvgOptions) -> String {
+pub fn DebugDocument::to_svg_with(
+  self : DebugDocument,
+  options : SvgOptions,
+) -> String {
   let out = StringBuilder()
   out.write_string(
     "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 \{self.image.width} \{self.image.height}\" width=\"\{self.image.width}\" height=\"\{self.image.height}\" role=\"img\" aria-label=\"\{escape_attr(self.title)}\">\n",
@@ -57,17 +60,25 @@ fn write_grid(out : StringBuilder, image : ImageSpec) -> Unit {
   let step = grid_step(image)
   out.write_string("<g stroke=\"rgba(148,163,184,0.25)\" stroke-width=\"1\">\n")
   for x = 0; x <= image.width; x = x + step {
-    out.write_string("<line x1=\"\{x}\" y1=\"0\" x2=\"\{x}\" y2=\"\{image.height}\"/>\n")
+    out.write_string(
+      "<line x1=\"\{x}\" y1=\"0\" x2=\"\{x}\" y2=\"\{image.height}\"/>\n",
+    )
   }
   for y = 0; y <= image.height; y = y + step {
-    out.write_string("<line x1=\"0\" y1=\"\{y}\" x2=\"\{image.width}\" y2=\"\{y}\"/>\n")
+    out.write_string(
+      "<line x1=\"0\" y1=\"\{y}\" x2=\"\{image.width}\" y2=\"\{y}\"/>\n",
+    )
   }
   out.write_string("</g>\n")
 }
 
 ///|
 fn grid_step(image : ImageSpec) -> Int {
-  let long_edge = if image.width > image.height { image.width } else { image.height }
+  let long_edge = if image.width > image.height {
+    image.width
+  } else {
+    image.height
+  }
   if long_edge >= 1600 {
     160
   } else if long_edge >= 800 {
@@ -78,7 +89,12 @@ fn grid_step(image : ImageSpec) -> Int {
 }
 
 ///|
-fn write_overlay(out : StringBuilder, overlay : Overlay, index : Int, options : SvgOptions) -> Unit {
+fn write_overlay(
+  out : StringBuilder,
+  overlay : Overlay,
+  index : Int,
+  options : SvgOptions,
+) -> Unit {
   match overlay {
     BBox(rect~, label~, color~) =>
       write_bbox(out, rect, resolve_color(color, index), label, options)
@@ -108,7 +124,8 @@ fn write_bbox(
   )
   if options.show_labels {
     match label {
-      Some(value) => write_label(out, Point::new(x=rect.x, y=rect.y), value, color)
+      Some(value) =>
+        write_label(out, Point::new(x=rect.x, y=rect.y), value, color)
       None => ()
     }
   }
@@ -129,19 +146,22 @@ fn write_mask(
   }
   if options.show_labels && polygons.length() > 0 {
     match label {
-      Some(value) => {
+      Some(value) =>
         match polygons[0].get(0) {
           Some(point) => write_label(out, point, value, color)
           None => ()
         }
-      }
       None => ()
     }
   }
 }
 
 ///|
-fn write_keypoints(out : StringBuilder, points : Array[Keypoint], color : Color) -> Unit {
+fn write_keypoints(
+  out : StringBuilder,
+  points : Array[Keypoint],
+  color : Color,
+) -> Unit {
   for point in points {
     if point.visible {
       out.write_string(
@@ -157,7 +177,11 @@ fn write_keypoints(out : StringBuilder, points : Array[Keypoint], color : Color)
 }
 
 ///|
-fn write_trajectory(out : StringBuilder, path : Trajectory, color : Color) -> Unit {
+fn write_trajectory(
+  out : StringBuilder,
+  path : Trajectory,
+  color : Color,
+) -> Unit {
   if path.points.length() > 1 {
     out.write_string(
       "<polyline points=\"\{polygon_points(path.points)}\" fill=\"none\" stroke=\"\{color.to_css()}\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n",
@@ -173,7 +197,12 @@ fn write_trajectory(out : StringBuilder, path : Trajectory, color : Color) -> Un
 }
 
 ///|
-fn write_heatmap(out : StringBuilder, cells : Array[HeatCell], low : Color, high : Color) -> Unit {
+fn write_heatmap(
+  out : StringBuilder,
+  cells : Array[HeatCell],
+  low : Color,
+  high : Color,
+) -> Unit {
   for cell in cells {
     let color = mix_color(low, high, clamp01(cell.value)).with_alpha(0.46)
     out.write_string(
@@ -207,7 +236,12 @@ fn write_error_region(
 }
 
 ///|
-fn write_label(out : StringBuilder, anchor : Point, label : Label, color : Color) -> Unit {
+fn write_label(
+  out : StringBuilder,
+  anchor : Point,
+  label : Label,
+  color : Color,
+) -> Unit {
   let text = match label.score {
     Some(score) => "\{label.text} \{score}"
     None => label.text
