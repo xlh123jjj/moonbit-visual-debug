@@ -13,6 +13,19 @@ pub fn palette(Int) -> Color
 // Errors
 
 // Types and methods
+pub(all) struct Affine2D {
+  sx : Double
+  sy : Double
+  tx : Double
+  ty : Double
+} derive(ToJson, @debug.Debug)
+pub fn Affine2D::apply_point(Self, Point) -> Point
+pub fn Affine2D::apply_rect(Self, Rect) -> Rect
+pub fn Affine2D::identity() -> Self
+pub fn Affine2D::scale(sx~ : Double, sy~ : Double) -> Self
+pub fn Affine2D::then(Self, Self) -> Self
+pub fn Affine2D::translate(tx~ : Double, ty~ : Double) -> Self
+
 pub(all) struct Canvas {
   width : Int
   height : Int
@@ -45,14 +58,18 @@ pub(all) struct DebugDocument {
   layers : Array[Layer]
 } derive(ToJson, @debug.Debug)
 pub fn DebugDocument::add_layer(Self, Layer) -> Self
+pub fn DebugDocument::content_bounds(Self) -> Rect?
+pub fn DebugDocument::is_valid(Self) -> Bool
 pub fn DebugDocument::new(title~ : String, image~ : ImageSpec, image_href? : String) -> Self
 pub fn DebugDocument::overlay_count(Self) -> Int
+pub fn DebugDocument::resize(Self, width~ : Int, height~ : Int) -> Self
 pub fn DebugDocument::to_canvas(Self, background? : Color) -> Canvas
 pub fn DebugDocument::to_html_report(Self) -> String
 pub fn DebugDocument::to_html_report_with(Self, ReportOptions) -> String
 pub fn DebugDocument::to_png(Self) -> Bytes
 pub fn DebugDocument::to_svg(Self) -> String
 pub fn DebugDocument::to_svg_with(Self, SvgOptions) -> String
+pub fn DebugDocument::validate(Self) -> Array[Diagnostic]
 pub fn DebugDocument::visible_layers(Self) -> Array[Layer]
 
 pub(all) struct Detection {
@@ -62,6 +79,19 @@ pub(all) struct Detection {
   score : Double
 } derive(ToJson, @debug.Debug)
 pub fn Detection::new(id~ : String, rect~ : Rect, label~ : String, score? : Double) -> Self
+
+pub(all) struct Diagnostic {
+  level : DiagnosticLevel
+  path : String
+  message : String
+} derive(ToJson, @debug.Debug)
+pub fn Diagnostic::new(level~ : DiagnosticLevel, path~ : String, message~ : String) -> Self
+
+pub(all) enum DiagnosticLevel {
+  Info
+  Warning
+  Error
+} derive(ToJson, @debug.Debug)
 
 pub(all) struct HeatCell {
   rect : Rect
@@ -97,8 +127,10 @@ pub(all) struct Layer {
   overlays : Array[Overlay]
 } derive(ToJson, @debug.Debug)
 pub fn Layer::add(Self, Overlay) -> Self
+pub fn Layer::bounds(Self) -> Rect?
 pub fn Layer::hidden(Self) -> Self
 pub fn Layer::new(id~ : String, overlays? : Array[Overlay]) -> Self
+pub fn Layer::transform(Self, Affine2D) -> Self
 pub fn Layer::with_opacity(Self, Double) -> Self
 
 pub(all) enum MarkerShape {
@@ -143,6 +175,8 @@ pub(all) enum Overlay {
   Heatmap(cells~ : Array[HeatCell], low~ : Color?, high~ : Color?)
   ErrorRegion(rect~ : Rect, expected~ : String, actual~ : String, severity~ : Double)
 } derive(ToJson, @debug.Debug)
+pub fn Overlay::bounds(Self) -> Rect?
+pub fn Overlay::transform(Self, Affine2D) -> Self
 
 pub(all) struct Point {
   x : Double

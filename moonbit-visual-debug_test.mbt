@@ -130,3 +130,35 @@ test "detection matcher reports false positive and mismatch" {
   inspect(summary.label_mismatch, content="1")
   inspect(summary.to_error_layer().overlays.length(), content="2")
 }
+
+///|
+test "document resize transforms overlay bounds" {
+  let resized = sample_document().resize(width=192, height=128)
+  inspect(resized.image.width, content="192")
+  inspect(resized.image.height, content="128")
+  match resized.content_bounds() {
+    Some(bounds) => {
+      inspect(bounds.x, content="0")
+      inspect(bounds.width > 90.0, content="true")
+    }
+    None => fail("expected bounds")
+  }
+}
+
+///|
+test "validation reports invalid rectangles" {
+  let invalid = DebugDocument::new(
+    title="bad",
+    image=ImageSpec::new(width=64, height=64),
+  ).add_layer(
+    Layer::new(id="bad-box").add(
+      BBox(
+        rect=Rect::new(x=0.0, y=0.0, width=0.0, height=10.0),
+        label=None,
+        color=None,
+      ),
+    ),
+  )
+  inspect(invalid.is_valid(), content="false")
+  inspect(invalid.validate().length(), content="1")
+}
