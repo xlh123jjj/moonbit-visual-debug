@@ -1,0 +1,7 @@
+// import {
+//   "2515050243qyf/moonbit-visual-debug" @lib,
+// }
+
+options(
+  "is-main": true,
+)
