@@ -1,6 +1,6 @@
-// import {
-//   "2515050243qyf/moonbit-visual-debug" @lib,
-// }
+import {
+  "xlh123jjj/moonbit-visual-debug" @visual,
+}
 
 options(
   "is-main": true,
