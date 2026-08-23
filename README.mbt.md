@@ -15,7 +15,8 @@ It is a library-first reporting layer, not a detector, segmenter, image decoder,
 - SVG and standalone HTML reports with layer metadata.
 - Pure MoonBit RGBA canvas and deterministic PNG encoding.
 - Detection comparison with true-positive, false-positive, false-negative, and label-mismatch output.
-- COCO `categories` / `annotations` import, export, and conversion to `Detection` values.
+- COCO datasets/results plus YOLO and Pascal VOC box adapters.
+- Baseline-versus-candidate document diffs, per-class metrics, and machine-readable manifests.
 
 ## Quick Start
 
@@ -77,7 +78,8 @@ test "load COCO annotations" {
 | `overlay.mbt`, `transform.mbt` | Overlay document model, composition, transforms, and bounds. |
 | `svg.mbt`, `report.mbt`, `raster.mbt` | SVG, HTML, canvas, and PNG output backends. |
 | `analysis.mbt`, `validation.mbt` | Detection matching, error overlays, and input diagnostics. |
-| `dataset.mbt` | COCO import/export and conversion into the core detection model. |
+| `dataset.mbt`, `adapter.mbt` | COCO, YOLO, and Pascal VOC interchange. |
+| `diff.mbt`, `metrics.mbt`, `manifest.mbt` | CI-ready diffing, evaluation summaries, and stable exports. |
 
 ## Benchmarks
 
@@ -101,7 +103,7 @@ moon info --target wasm-gc
 git diff --exit-code
 ```
 
-The suite covers render output, PNG block boundaries, COCO parsing and serialization, malformed annotations, matching thresholds, and diagnostic behavior.
+The suite covers rendering, polygon rasterization, PNG block boundaries, COCO/YOLO/VOC interchange, malformed annotations, matching thresholds, report diffs, metrics, manifests, and diagnostic behavior.
 
 ## CI
 

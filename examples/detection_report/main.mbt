@@ -47,7 +47,7 @@ fn main {
       ),
     )
   let report = @visual.DebugDocument::new(
-      title="detection acceptance report",
+      title="detection inspection report",
       image=@visual.ImageSpec::new(width=180, height=140),
     )
     .add_layer(predictions)

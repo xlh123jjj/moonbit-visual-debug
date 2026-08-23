@@ -20,5 +20,5 @@ Use the native release target for comparable results. Measurements vary with CPU
 
 | Benchmark | Mean ± σ | Range | Sample layout |
 | --- | ---: | ---: | --- |
-| Render 256 overlays to SVG | 934.37 µs ± 15.54 µs | 912.33–956.89 µs | 10 × 100 runs |
-| Render 256 overlays to PNG | 9.39 ms ± 655.86 µs | 8.47–10.23 ms | 10 × 11 runs |
+| Render 256 overlays to SVG | 860.11 µs ± 46.54 µs | 785.79–929.27 µs | 10 × 119 runs |
+| Render 256 overlays to PNG | 8.32 ms ± 313.24 µs | 7.91–8.80 ms | 10 × 12 runs |

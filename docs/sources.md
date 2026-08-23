@@ -1,10 +1,10 @@
 # Sources And Scope
 
-This repository contains original MoonBit source written for the MoonBit August hackathon project `moonbit-visual-debug`.
+This repository contains original MoonBit source for `moonbit-visual-debug`.
 
 ## Ecosystem Check
 
-Before implementation, Mooncakes search results were checked for nearby packages. The closest visible overlap was SVG-oriented tooling such as `Milky2018/svg`, which is a standalone SVG parser and deterministic CPU renderer. This project has a different scope: it models computer-vision debug overlays and emits reports; SVG is only one output backend.
+The closest visible overlap is SVG-oriented tooling such as `Milky2018/svg`, a standalone SVG parser and deterministic CPU renderer. This project has a different scope: it models computer-vision debug overlays and emits reports; SVG is only one output backend.
 
 ## External References
 
