@@ -4,6 +4,14 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   wasm:
@@ -83,3 +91,28 @@ jobs:
 
       - name: All target check
         run: moon check --target all --deny-warn
+
+      - name: Benchmark compilation
+        run: moon bench visual_bench.mbt --target native --release --build-only --deny-warn
+
+  coverage:
+    name: coverage smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Coverage
+        run: |
+          moon version --all
+          moon update
+          moon test --target wasm-gc --enable-coverage --deny-warn
+          moon coverage report -f summary
+          moon coverage analyze

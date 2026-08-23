@@ -17,6 +17,8 @@ The root package owns all public concrete types. This keeps construction, method
 - `report.mbt`: self-contained HTML report rendering.
 - `raster.mbt`: RGBA canvas and PNG encoding.
 - `analysis.mbt`: detection matching and error-layer generation.
+- `dataset.mbt`: COCO annotation/category validation, serialization, and conversion to detections.
+- `diff.mbt`: baseline-versus-candidate document summaries and HTML output.
 
 ## Rendering Strategy
 
@@ -27,6 +29,10 @@ PNG is intentionally deterministic and dependency-light. The current encoder use
 ## Error Analysis
 
 The matcher uses greedy IoU assignment over unused predictions. It is simple, predictable, and good enough for debugging overlays. More specialized matching policies can be added later as separate functions without changing `MatchSummary`.
+
+## Document Diffing
+
+`compare_documents` produces a side-effect-free CI summary. Unique, non-empty layer IDs match by ID; duplicate and empty IDs pair by occurrence order within the same ID, making output stable across runs. `DocumentDiff::to_html` emits a self-contained, escaped HTML artifact for visual review.
 
 ## Non-goals
 

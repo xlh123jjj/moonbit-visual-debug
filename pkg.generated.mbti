@@ -8,11 +8,25 @@ import {
 // Values
 pub fn compare_detections(Array[Detection], Array[Detection], iou_threshold? : Double) -> MatchSummary
 
+pub fn compare_documents(DebugDocument, DebugDocument) -> DocumentDiff
+
+pub fn evaluate_detections(Array[Detection], Array[Detection], iou_threshold? : Double, score_threshold? : Double) -> Result[DetectionMetrics, MetricsError]
+
 pub fn palette(Int) -> Color
+
+pub fn sweep_iou_thresholds(Array[Detection], Array[Detection], Array[Double], score_threshold? : Double) -> Result[Array[DetectionMetrics], MetricsError]
 
 // Errors
 
 // Types and methods
+pub(all) enum AdapterError {
+  InvalidImageSize(message~ : String)
+  InvalidYolo(field~ : String, message~ : String)
+  InvalidYoloText(message~ : String)
+  MissingClassMapping(class_id~ : Int)
+  InvalidVoc(path~ : String, message~ : String)
+} derive(ToJson, @debug.Debug)
+
 pub(all) struct Affine2D {
   sx : Double
   sy : Double
@@ -26,18 +40,100 @@ pub fn Affine2D::scale(sx~ : Double, sy~ : Double) -> Self
 pub fn Affine2D::then(Self, Self) -> Self
 pub fn Affine2D::translate(tx~ : Double, ty~ : Double) -> Self
 
+pub(all) struct AggregateMetrics {
+  true_positive : Int
+  false_positive : Int
+  false_negative : Int
+  label_mismatch : Int
+  precision : Double
+  recall : Double
+  f1 : Double
+} derive(ToJson, @debug.Debug)
+
 pub(all) struct Canvas {
   width : Int
   height : Int
   pixels : Array[Byte]
 } derive(@debug.Debug)
 pub fn Canvas::draw_point(Self, Point, Color, radius? : Int) -> Unit
+pub fn Canvas::fill_polygon(Self, Array[Point], Color) -> Unit
+pub fn Canvas::fill_polygons(Self, Array[Array[Point]], Color) -> Unit
 pub fn Canvas::fill_rect(Self, Rect, Color) -> Unit
 pub fn Canvas::from_image_spec(ImageSpec, background? : Color) -> Self
 pub fn Canvas::new(width~ : Int, height~ : Int, background? : Color) -> Self
 pub fn Canvas::set_pixel(Self, Int, Int, Color) -> Unit
 pub fn Canvas::stroke_rect(Self, Rect, Color, width? : Int) -> Unit
 pub fn Canvas::to_png(Self) -> Bytes
+
+pub(all) struct ClassMetrics {
+  label : String
+  true_positive : Int
+  false_positive : Int
+  false_negative : Int
+  label_mismatch : Int
+  support : Int
+  precision : Double
+  recall : Double
+  f1 : Double
+} derive(ToJson, @debug.Debug)
+
+pub(all) struct CocoAnnotation {
+  id : Int
+  image_id : Int
+  category_id : Int
+  bbox : Rect
+  area : Double?
+  iscrowd : Int?
+} derive(ToJson, @debug.Debug)
+pub fn CocoAnnotation::new(id~ : Int, image_id~ : Int, category_id~ : Int, bbox~ : Rect, area? : Double, iscrowd? : Int) -> Self
+
+pub(all) struct CocoCategory {
+  id : Int
+  name : String
+} derive(ToJson, @debug.Debug)
+pub fn CocoCategory::new(id~ : Int, name~ : String) -> Self
+
+pub(all) struct CocoDataset {
+  images : Array[CocoImage]
+  categories : Array[CocoCategory]
+  annotations : Array[CocoAnnotation]
+} derive(ToJson, @debug.Debug)
+pub fn CocoDataset::from_json(String) -> Result[Self, CocoError]
+pub fn CocoDataset::new(annotations~ : Array[CocoAnnotation], categories? : Array[CocoCategory], images? : Array[CocoImage]) -> Self
+pub fn CocoDataset::to_coco_json(Self) -> Result[String, CocoError]
+pub fn CocoDataset::to_detections(Self) -> Array[Detection]
+pub fn CocoDataset::try_new(annotations~ : Array[CocoAnnotation], categories? : Array[CocoCategory], images? : Array[CocoImage]) -> Result[Self, CocoError]
+pub fn CocoDataset::validate(Self) -> Result[Unit, CocoError]
+
+pub(all) enum CocoError {
+  InvalidJson(message~ : String)
+  InvalidField(path~ : String, message~ : String)
+} derive(ToJson, @debug.Debug)
+
+pub(all) struct CocoImage {
+  id : Int
+  width : Int
+  height : Int
+  file_name : String?
+} derive(ToJson, @debug.Debug)
+pub fn CocoImage::new(id~ : Int, width~ : Int, height~ : Int, file_name? : String) -> Self
+
+pub(all) struct CocoResult {
+  image_id : Int
+  category_id : Int
+  bbox : Rect
+  score : Double
+} derive(ToJson, @debug.Debug)
+pub fn CocoResult::new(image_id~ : Int, category_id~ : Int, bbox~ : Rect, score~ : Double) -> Self
+
+pub(all) struct CocoResults {
+  results : Array[CocoResult]
+} derive(ToJson, @debug.Debug)
+pub fn CocoResults::from_json(String) -> Result[Self, CocoError]
+pub fn CocoResults::new(results~ : Array[CocoResult]) -> Self
+pub fn CocoResults::to_coco_json(Self) -> Result[String, CocoError]
+pub fn CocoResults::try_new(results~ : Array[CocoResult]) -> Result[Self, CocoError]
+pub fn CocoResults::validate(Self) -> Result[Unit, CocoError]
 
 pub(all) struct Color {
   r : Int
@@ -51,6 +147,17 @@ pub fn Color::to_css(Self) -> String
 pub fn Color::to_hex(Self) -> String
 pub fn Color::with_alpha(Self, Double) -> Self
 
+pub(all) struct ConfusionCell {
+  expected_label : String?
+  actual_label : String?
+  count : Int
+} derive(ToJson, @debug.Debug)
+
+pub(all) struct ConfusionMatrix {
+  labels : Array[String]
+  cells : Array[ConfusionCell]
+} derive(ToJson, @debug.Debug)
+
 pub(all) struct DebugDocument {
   title : String
   image : ImageSpec
@@ -60,6 +167,7 @@ pub(all) struct DebugDocument {
 pub fn DebugDocument::add_layer(Self, Layer) -> Self
 pub fn DebugDocument::content_bounds(Self) -> Rect?
 pub fn DebugDocument::is_valid(Self) -> Bool
+pub fn DebugDocument::manifest(Self) -> DocumentManifest
 pub fn DebugDocument::new(title~ : String, image~ : ImageSpec, image_href? : String) -> Self
 pub fn DebugDocument::overlay_count(Self) -> Int
 pub fn DebugDocument::resize(Self, width~ : Int, height~ : Int) -> Self
@@ -80,6 +188,18 @@ pub(all) struct Detection {
 } derive(ToJson, @debug.Debug)
 pub fn Detection::new(id~ : String, rect~ : Rect, label~ : String, score? : Double) -> Self
 
+pub(all) struct DetectionMetrics {
+  iou_threshold : Double
+  score_threshold : Double
+  matches : MatchSummary
+  classes : Array[ClassMetrics]
+  confusion : ConfusionMatrix
+  micro : AggregateMetrics
+  macro_average : AggregateMetrics
+} derive(ToJson, @debug.Debug)
+pub fn DetectionMetrics::to_csv(Self) -> String
+pub fn DetectionMetrics::to_html_table(Self) -> String
+
 pub(all) struct Diagnostic {
   level : DiagnosticLevel
   path : String
@@ -92,6 +212,45 @@ pub(all) enum DiagnosticLevel {
   Warning
   Error
 } derive(ToJson, @debug.Debug)
+
+pub(all) struct DiagnosticSeverityCounts {
+  info : Int
+  warning : Int
+  error : Int
+} derive(ToJson, @debug.Debug)
+
+pub(all) struct DocumentDiff {
+  baseline_title : String
+  candidate_title : String
+  baseline_image : ImageSpec
+  candidate_image : ImageSpec
+  baseline_image_href : String?
+  candidate_image_href : String?
+  title_changed : Bool
+  image_size_changed : Bool
+  image_href_changed : Bool
+  overlay_count_delta : Int
+  layer_changes : Array[LayerChange]
+} derive(ToJson, @debug.Debug)
+pub fn DocumentDiff::to_html(Self) -> String
+
+pub(all) struct DocumentManifest {
+  title : String
+  image_width : Int
+  image_height : Int
+  layer_count : Int
+  visible_layer_count : Int
+  total_overlay_count : Int
+  visible_overlay_count : Int
+  overlays : OverlayKindCounts
+  visible_overlays : OverlayKindCounts
+  content_bounds : Rect?
+  diagnostics : DiagnosticSeverityCounts
+  is_valid : Bool
+  layers : Array[LayerManifest]
+} derive(ToJson, @debug.Debug)
+pub fn DocumentManifest::to_json_text(Self) -> String
+pub fn DocumentManifest::to_markdown(Self) -> String
 
 pub(all) struct HeatCell {
   rect : Rect
@@ -133,6 +292,30 @@ pub fn Layer::new(id~ : String, overlays? : Array[Overlay]) -> Self
 pub fn Layer::transform(Self, Affine2D) -> Self
 pub fn Layer::with_opacity(Self, Double) -> Self
 
+pub(all) struct LayerChange {
+  id : String
+  kind : LayerChangeKind
+  baseline_index : Int?
+  candidate_index : Int?
+  visibility_changed : Bool
+  opacity_changed : Bool
+  overlay_delta : Int
+} derive(ToJson, @debug.Debug)
+
+pub(all) enum LayerChangeKind {
+  Added
+  Removed
+  Changed
+} derive(ToJson, @debug.Debug)
+
+pub(all) struct LayerManifest {
+  id : String
+  visible : Bool
+  opacity : Double
+  overlay_count : Int
+  overlays : OverlayKindCounts
+} derive(ToJson, @debug.Debug)
+
 pub(all) enum MarkerShape {
   Circle
   Square
@@ -167,6 +350,13 @@ pub fn MatchSummary::precision(Self) -> Double
 pub fn MatchSummary::recall(Self) -> Double
 pub fn MatchSummary::to_error_layer(Self, id? : String) -> Layer
 
+pub(all) enum MetricsError {
+  InvalidIouThreshold(value~ : Double)
+  InvalidScoreThreshold(value~ : Double)
+  InvalidDetectionScore(id~ : String, score~ : Double)
+  EmptyThresholdSweep
+} derive(ToJson, @debug.Debug)
+
 pub(all) enum Overlay {
   BBox(rect~ : Rect, label~ : Label?, color~ : Color?)
   Mask(polygons~ : Array[Array[Point]], label~ : Label?, color~ : Color?)
@@ -177,6 +367,15 @@ pub(all) enum Overlay {
 } derive(ToJson, @debug.Debug)
 pub fn Overlay::bounds(Self) -> Rect?
 pub fn Overlay::transform(Self, Affine2D) -> Self
+
+pub(all) struct OverlayKindCounts {
+  bbox : Int
+  mask : Int
+  keypoints : Int
+  trajectory : Int
+  heatmap : Int
+  error_region : Int
+} derive(ToJson, @debug.Debug)
 
 pub(all) struct Point {
   x : Double
@@ -228,7 +427,36 @@ pub(all) struct Trajectory {
 } derive(ToJson, @debug.Debug)
 pub fn Trajectory::new(id~ : String, points~ : Array[Point]) -> Self
 
+pub(all) struct VocAnnotation {
+  filename : String?
+  size : ImageSpec
+  objects : Array[VocObject]
+} derive(ToJson, @debug.Debug)
+pub fn VocAnnotation::from_xml(String) -> Result[Self, AdapterError]
+pub fn VocAnnotation::new(filename? : String, size~ : ImageSpec, objects~ : Array[VocObject]) -> Self
+pub fn VocAnnotation::to_xml(Self) -> Result[String, AdapterError]
+pub fn VocAnnotation::try_new(filename? : String, size~ : ImageSpec, objects~ : Array[VocObject]) -> Result[Self, AdapterError]
+
+pub(all) struct VocObject {
+  name : String
+  bbox : Rect
+} derive(ToJson, @debug.Debug)
+pub fn VocObject::new(name~ : String, bbox~ : Rect) -> Self
+
+pub(all) struct YoloBox {
+  class_id : Int
+  center_x : Double
+  center_y : Double
+  width : Double
+  height : Double
+  confidence : Double?
+} derive(ToJson, @debug.Debug)
+pub fn YoloBox::from_line(String, image~ : ImageSpec, classes~ : Array[String]) -> Result[Self, AdapterError]
+pub fn YoloBox::from_rect(class_id~ : Int, rect~ : Rect, image~ : ImageSpec, confidence? : Double) -> Result[Self, AdapterError]
+pub fn YoloBox::to_line(Self, Array[String]) -> Result[String, AdapterError]
+pub fn YoloBox::to_rect(Self, ImageSpec) -> Result[Rect, AdapterError]
+pub fn YoloBox::try_new(class_id~ : Int, center_x~ : Double, center_y~ : Double, width~ : Double, height~ : Double, confidence? : Double) -> Result[Self, AdapterError]
+
 // Type aliases
 
 // Traits
-

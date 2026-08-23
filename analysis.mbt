@@ -144,7 +144,7 @@ fn best_unused_match(
   for index, candidate in actual {
     if !used_actual[index] {
       let score = expected.rect.iou(candidate.rect)
-      if score >= iou_threshold {
+      if score > 0.0 && score >= iou_threshold {
         match best {
           None => best = Some((index, candidate, score))
           Some((_, _, best_score)) =>

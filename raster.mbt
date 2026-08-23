@@ -59,6 +59,62 @@ pub fn Canvas::fill_rect(self : Canvas, rect : Rect, color : Color) -> Unit {
 }
 
 ///|
+/// Fills one polygon using even-odd containment evaluated at pixel centers.
+///
+/// An edge contributes only when a pixel center's horizontal ray crosses its
+/// half-open vertical range `[min_y, max_y)`, so shared vertices and horizontal
+/// edges have deterministic coverage. Polygons with fewer than three points are
+/// ignored and all writes are clipped to the canvas.
+pub fn Canvas::fill_polygon(
+  self : Canvas,
+  polygon : Array[Point],
+  color : Color,
+) -> Unit {
+  self.fill_polygons([polygon], color)
+}
+
+///|
+/// Fills polygons with the even-odd rule, allowing nested polygons to form holes.
+///
+/// Pixels are evaluated at `(x + 0.5, y + 0.5)`. The same half-open edge rule as
+/// `fill_polygon` makes boundary coverage reproducible regardless of edge order.
+pub fn Canvas::fill_polygons(
+  self : Canvas,
+  polygons : Array[Array[Point]],
+  color : Color,
+) -> Unit {
+  let valid_polygons = polygons.filter(polygon => polygon.length() >= 3)
+  if valid_polygons.is_empty() {
+    ()
+  } else {
+    match bounds_of_polygons(valid_polygons) {
+      None => ()
+      Some(bounds) => {
+        let raw_x0 = floor_to_int(bounds.x)
+        let raw_y0 = floor_to_int(bounds.y)
+        let raw_x1 = ceil_to_int(bounds.right())
+        let raw_y1 = ceil_to_int(bounds.bottom())
+        let x0 = if raw_x0 < 0 { 0 } else { raw_x0 }
+        let y0 = if raw_y0 < 0 { 0 } else { raw_y0 }
+        let x1 = if raw_x1 > self.width { self.width } else { raw_x1 }
+        let y1 = if raw_y1 > self.height { self.height } else { raw_y1 }
+        for y in y0..<y1 {
+          for x in x0..<x1 {
+            if point_is_inside_polygons(
+                x.to_double() + 0.5,
+                y.to_double() + 0.5,
+                valid_polygons,
+              ) {
+              self.set_pixel(x, y, color)
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+///|
 pub fn Canvas::stroke_rect(
   self : Canvas,
   rect : Rect,
@@ -128,12 +184,7 @@ fn draw_overlay(canvas : Canvas, overlay : Overlay, index : Int) -> Unit {
       canvas.stroke_rect(rect, resolve_raster_color(color, index))
     Mask(polygons~, color~, ..) => {
       let color = resolve_raster_color(color, index).with_alpha(0.45)
-      for polygon in polygons {
-        match bounds_of_points(polygon) {
-          Some(rect) => canvas.fill_rect(rect, color)
-          None => ()
-        }
-      }
+      canvas.fill_polygons(polygons, color)
     }
     Keypoints(points~, color~) => {
       let color = resolve_raster_color(color, index)
@@ -299,36 +350,6 @@ fn adler32(bytes : Array[Byte]) -> UInt {
 }
 
 ///|
-fn bounds_of_points(points : Array[Point]) -> Rect? {
-  match points.get(0) {
-    None => None
-    Some(first) => {
-      let mut min_x = first.x
-      let mut min_y = first.y
-      let mut max_x = first.x
-      let mut max_y = first.y
-      for point in points {
-        if point.x < min_x {
-          min_x = point.x
-        }
-        if point.y < min_y {
-          min_y = point.y
-        }
-        if point.x > max_x {
-          max_x = point.x
-        }
-        if point.y > max_y {
-          max_y = point.y
-        }
-      }
-      Some(
-        Rect::new(x=min_x, y=min_y, width=max_x - min_x, height=max_y - min_y),
-      )
-    }
-  }
-}
-
-///|
 fn resolve_raster_color(color : Color?, index : Int) -> Color {
   match color {
     Some(value) => value
@@ -366,4 +387,46 @@ fn floor_to_int(value : Double) -> Int {
 ///|
 fn ceil_to_int(value : Double) -> Int {
   value.ceil().to_int()
+}
+
+///|
+fn point_is_inside_polygons(
+  x : Double,
+  y : Double,
+  polygons : Array[Array[Point]],
+) -> Bool {
+  let mut inside = false
+  for polygon in polygons {
+    if point_is_inside_polygon(x, y, polygon) {
+      inside = !inside
+    }
+  }
+  inside
+}
+
+///|
+fn point_is_inside_polygon(
+  x : Double,
+  y : Double,
+  polygon : Array[Point],
+) -> Bool {
+  if polygon.length() < 3 {
+    false
+  } else {
+    let mut inside = false
+    let mut previous = polygon[polygon.length() - 1]
+    for current in polygon {
+      let crosses_scanline = (previous.y <= y && y < current.y) ||
+        (current.y <= y && y < previous.y)
+      if crosses_scanline {
+        let crossing_x = previous.x +
+          (y - previous.y) * (current.x - previous.x) / (current.y - previous.y)
+        if x < crossing_x {
+          inside = !inside
+        }
+      }
+      previous = current
+    }
+    inside
+  }
 }

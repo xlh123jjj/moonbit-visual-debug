@@ -1,92 +1,115 @@
 # moonbit-visual-debug
 
-`moonbit-visual-debug` is a MoonBit library for building visual debugging overlays around computer-vision and image-analysis workflows. It models bounding boxes, masks, keypoints, trajectories, heatmaps, and error regions, then renders them as SVG, HTML reports, or PNG snapshots.
+Typed visual-debugging reports for MoonBit computer-vision and image-analysis workflows.
 
-The project is intentionally library-first: it does not try to be a detector, segmenter, or SVG engine. It gives those systems a small, typed reporting layer that is easy to run in CI and simple enough to embed in examples, notebooks, demos, and acceptance reports.
+## Project Positioning
 
-## Features
+`moonbit-visual-debug` turns structured algorithm outputs into inspectable visual evidence. It models boxes, masks, keypoints, trajectories, heatmaps, error regions, and detection matches, then renders a deterministic SVG, self-contained HTML report, or PNG snapshot.
 
-- Geometry primitives for image-space points, rectangles, sizes, and IoU.
-- Overlay model for bbox, mask, keypoint, trajectory, heatmap, and error-region views.
-- SVG renderer with optional grid, labels, image background, layers, and opacity.
-- HTML report renderer with embedded SVG and layer summary.
-- RGBA canvas plus pure MoonBit PNG encoder for deterministic smoke-test snapshots.
-- Detection comparison helper for true positive, false positive, false negative, and label-mismatch analysis.
-- Demo CLI that prints a complete HTML report.
+It is a library-first reporting layer, not a detector, segmenter, image decoder, or general SVG engine. The package is intended for CI artifacts, experiments, demos, and reviewable visual regression evidence.
 
-## Install
+## Core Capabilities
+
+- Image-space geometry, intersection, and IoU primitives.
+- Typed overlays for bounding boxes, polygon masks, keypoints, trajectories, heatmaps, and error regions.
+- SVG and standalone HTML reports with layer metadata.
+- Pure MoonBit RGBA canvas and deterministic PNG encoding.
+- Detection comparison with true-positive, false-positive, false-negative, and label-mismatch output.
+- COCO `categories` / `annotations` import, export, and conversion to `Detection` values.
+
+## Quick Start
 
 ```bash
 moon add xlh123jjj/moonbit-visual-debug
 ```
 
-For local development:
-
-```bash
-moon check --target wasm-gc --deny-warn
-moon test --target wasm-gc
-moon fmt --deny-warn
-moon info --deny-warn
-```
-
-Native builds work when a system C compiler is installed. The CI workflow installs the MoonBit toolchain on Ubuntu and runs the same checks.
-
-## Quick Example
-
 ```mbt check
 ///|
-test "build a report" {
-  let detections = Layer::new(id="detections")
-    .add(
-      BBox(
-        rect=Rect::new(x=12.0, y=10.0, width=48.0, height=36.0),
-        label=Some(Label::new(text="part", score=0.91)),
-        color=Some(Color::rgb(r=39, g=125, b=255)),
-      ),
-    )
-    .add(
-      Keypoints(
-        points=[
-          Keypoint::new(point=Point::new(x=20.0, y=22.0), name="a"),
-          Keypoint::new(point=Point::new(x=48.0, y=35.0), name="b"),
-        ],
-        color=None,
-      ),
-    )
+test "build a visual inspection report" {
+  let layer = Layer::new(id="detections").add(
+    BBox(
+      rect=Rect::new(x=12.0, y=10.0, width=48.0, height=36.0),
+      label=Some(Label::new(text="part", score=0.91)),
+      color=Some(Color::rgb(r=39, g=125, b=255)),
+    ),
+  )
   let doc = DebugDocument::new(
     title="inspection",
     image=ImageSpec::new(width=96, height=64),
-  ).add_layer(detections)
-  inspect(doc.overlay_count(), content="2")
+  ).add_layer(layer)
+  inspect(doc.overlay_count(), content="1")
   inspect(doc.to_svg().contains("<svg"), content="true")
   inspect(doc.to_html_report().contains("<table>"), content="true")
-  inspect(doc.to_png()[1], content="b'\\x50'")
 }
 ```
 
-## Demo CLI
+## CLI
 
 ```bash
 moon run --target wasm-gc cmd/main > report.html
 ```
 
-Open `report.html` in a browser to inspect the embedded SVG report. On machines with a C compiler, `moon run cmd/main` also works with the native target.
+The command writes a self-contained HTML report to standard output. Open `report.html` in a browser, or attach it to a CI job as a review artifact.
 
-## Design Boundaries
+## Dataset Interoperability
 
-This package focuses on deterministic overlay generation. It avoids runtime coupling to a specific image library, model framework, dataset format, or UI framework. The PNG backend currently renders rectangular masks by polygon bounds for fast snapshots; detailed polygon geometry is preserved by SVG and HTML reports.
+`CocoDataset::from_json` accepts a COCO object containing `annotations`, optional `categories`, and image metadata. It validates required IDs and `[x, y, width, height]` boxes, then resolves category names when producing `Detection` values. Scored prediction arrays are handled separately by `CocoResults`. Unknown category IDs remain usable through a stable `category-<id>` fallback label.
 
-Planned extensions:
+```mbt check
+///|
+test "load COCO annotations" {
+  let source =
+    #|{"categories":[{"id":1,"name":"part"}],
+    #|"annotations":[{"id":7,"image_id":1,"category_id":1,
+    #|"bbox":[10,12,20,16]}]}
+  match CocoDataset::from_json(source) {
+    Ok(dataset) => inspect(dataset.to_detections()[0].label, content="part")
+    Err(_) => fail("expected valid COCO data")
+  }
+}
+```
 
-- COCO-style detection and keypoint import/export helpers.
-- VOC and YOLO box adapters.
-- Richer raster polygon filling.
-- Report diffing for baseline-vs-current CI artifacts.
-- Small browser viewer for filtering layers and inspecting records.
+## Architecture
 
-## Competition Fit
+| Component | Responsibility |
+| --- | --- |
+| `geometry.mbt`, `color.mbt` | Value types and deterministic presentation primitives. |
+| `overlay.mbt`, `transform.mbt` | Overlay document model, composition, transforms, and bounds. |
+| `svg.mbt`, `report.mbt`, `raster.mbt` | SVG, HTML, canvas, and PNG output backends. |
+| `analysis.mbt`, `validation.mbt` | Detection matching, error overlays, and input diagnostics. |
+| `dataset.mbt` | COCO import/export and conversion into the core detection model. |
 
-The project targets MoonBit ecosystem tooling and application infrastructure. It is meant to be reusable by algorithm developers who need visual acceptance evidence but do not want to build a reporting stack from scratch. Before selecting this topic, nearby Mooncakes packages were checked for overlap; the known SVG-related packages focus on SVG parsing/rendering rather than vision-debug overlay modeling and report generation.
+## Benchmarks
+
+`visual_bench.mbt` uses MoonBit's built-in benchmark runner. On the recorded Windows 11 native-release run, rendering 256 labelled overlays averaged 934.37 µs for SVG and 9.39 ms for PNG. See [docs/benchmarks.md](docs/benchmarks.md) for the command, environment, and complete measurements.
+
+Run the same benchmark locally with:
+
+```bash
+moon bench visual_bench.mbt --target native --release --deny-warn
+```
+
+## Testing
+
+```bash
+moon fmt --check
+moon check --target wasm-gc --deny-warn
+moon test --target wasm-gc --deny-warn
+moon check --target native --deny-warn
+moon test --target native --deny-warn
+moon info --target wasm-gc
+git diff --exit-code
+```
+
+The suite covers render output, PNG block boundaries, COCO parsing and serialization, malformed annotations, matching thresholds, and diagnostic behavior.
+
+## CI
+
+GitHub Actions installs the current stable MoonBit toolchain, checks formatting and generated interfaces, runs warning-denied wasm-gc tests on Ubuntu, macOS, and Windows, and validates native builds, coverage, and benchmark compilation on Ubuntu.
+
+## Scope
+
+The package deliberately has no runtime dependency on an image library, model framework, dataset host, or browser. Polygon detail is retained in SVG and HTML, and the PNG backend uses deterministic even-odd polygon filling for masks.
 
 ## License
 
