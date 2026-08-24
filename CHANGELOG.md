@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2
+
+- Refreshed the recorded native benchmark environment and results for the current stable MoonBit toolchain.
+
 ## 0.2.1
 
 - Clarified the public module documentation and example terminology.

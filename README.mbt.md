@@ -83,7 +83,7 @@ test "load COCO annotations" {
 
 ## Benchmarks
 
-`visual_bench.mbt` uses MoonBit's built-in benchmark runner. On the recorded Windows 11 native-release run, rendering 256 labelled overlays averaged 934.37 µs for SVG and 9.39 ms for PNG. See [docs/benchmarks.md](docs/benchmarks.md) for the command, environment, and complete measurements.
+`visual_bench.mbt` uses MoonBit's built-in benchmark runner. On the recorded Windows 11 native-release run, rendering 256 labelled overlays averaged 1.04 ms for SVG and 9.09 ms for PNG. See [docs/benchmarks.md](docs/benchmarks.md) for the command, environment, and complete measurements.
 
 Run the same benchmark locally with:
 
